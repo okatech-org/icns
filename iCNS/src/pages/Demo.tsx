@@ -13,6 +13,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useConvex, useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 import {
   ArrowLeft,
   Lock,
@@ -101,6 +103,8 @@ const Demo = () => {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const { setAuth } = useICNSAuth();
+  const convex = useConvex();
+  const authenticate = useMutation(api.auth.authenticate.authenticate);
 
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<ServiceCategorie>("cns_central");
@@ -130,30 +134,55 @@ const Demo = () => {
 
   const loginAsPersona = async (persona: Persona) => {
     setLoadingMatricule(persona.matricule);
+    const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
     const now = Date.now();
-    const fakeJwt = `DEMO.${btoa(
-      JSON.stringify({
-        sub: persona.matricule,
-        sid: `demo-session-${persona.matricule}`,
-        iat: now,
-        exp: now + 15 * 60 * 1000,
-        role: persona.role,
-        svc: persona.serviceCode,
-      }),
-    )}.STUB`;
-    setAuth({
-      jwt: fakeJwt,
-      expiresAt: now + 15 * 60 * 1000,
-      role: persona.role,
-      service: persona.serviceCode,
-    });
-    toast({
-      title: `Connecté · ${persona.prenomNom}`,
-      description: `${ROLE_LABEL[persona.role]} · ${persona.serviceLabel} · ${persona.classificationMax}`,
-    });
-    await new Promise((r) => setTimeout(r, 150));
-    setLoadingMatricule(null);
-    navigate("/icns/workspace", { replace: true });
+    try {
+      // 1) Récupérer un challenge frais (stateless côté serveur).
+      const challenge = await convex.query(
+        api.auth.authenticate.issueChallenge,
+        {},
+      );
+
+      // 2) Construire un certificat factice valide accepté par le backend
+      // en mode dev (issuer commence par "CN=PKI_SOUVERAINE"). La signature
+      // est mockée par la convention `MOCK-SIGN:<challenge>`.
+      const result = await authenticate({
+        certificat: {
+          matricule: persona.matricule,
+          serialNumber: `DEMO-${persona.matricule}`,
+          issuer: "CN=PKI_SOUVERAINE_DEMO",
+          notBefore: now - ONE_YEAR,
+          notAfter: now + ONE_YEAR,
+        },
+        challenge: challenge.challenge,
+        challengeSigne: `MOCK-SIGN:${challenge.challenge}`,
+        adresseIP: "127.0.0.1",
+        poste: "DEMO-WEB",
+      });
+
+      setAuth({
+        jwt: result.jwt,
+        expiresAt: result.expiresAt,
+        role: result.role,
+        service: result.service,
+      });
+      toast({
+        title: `Connecté · ${persona.prenomNom}`,
+        description: `${ROLE_LABEL[persona.role]} · ${persona.serviceLabel} · ${persona.classificationMax}`,
+      });
+      navigate("/icns/workspace", { replace: true });
+    } catch (err) {
+      const msg = (err as Error).message ?? "Erreur inconnue";
+      toast({
+        title: "Connexion démo refusée",
+        description: msg.includes("Authentification refusée")
+          ? `Le persona ${persona.matricule} n'est pas seedé côté backend (lancer "convex run seed:seedICNSDemo").`
+          : msg,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingMatricule(null);
+    }
   };
 
   // ──────────────────────────────────────────────────────────────────

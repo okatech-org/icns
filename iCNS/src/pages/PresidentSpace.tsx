@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery as useConvexQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 import { useToast } from "@/hooks/use-toast";
 import {
     Users,
@@ -801,33 +803,24 @@ export function MinisteresDirections({ theme }: { theme: ThemeConfig }) {
 }
 
 export function DecretsOrdonnances({ theme, onOpenDocument }: { theme: ThemeConfig, onOpenDocument: (id: string) => void }) {
-    const [documents, setDocuments] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchDocuments = async () => {
-            const { data, error } = await supabase
-                .from('decrets_ordonnances')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-            if (data) setDocuments(data);
-            setLoading(false);
-        };
-
-        fetchDocuments();
-
-        // Subscribe to changes
-        const channel = supabase
-            .channel('decrets_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'decrets_ordonnances' }, () => {
-                fetchDocuments();
-            })
-            .subscribe();
-
-        return () => { supabase.removeChannel(channel); };
-    }, []);
+    // Branche sur `officialDecrees` côté Convex (cf. convex/secretariat.ts).
+    const decrees = useConvexQuery(api.secretariat.getOfficialDecrees) as
+        | Array<{
+              _id: string;
+              referenceNumber: string;
+              title: string;
+              type?: string;
+              status: string;
+          }>
+        | undefined;
+    const loading = decrees === undefined;
+    const documents = (decrees ?? []).slice(0, 5).map((d) => ({
+        id: d._id,
+        reference: d.referenceNumber,
+        title: d.title,
+        type: d.type ?? "decree",
+        status: d.status,
+    }));
 
     const getStatusColor = (status: string) => {
         switch (status) {

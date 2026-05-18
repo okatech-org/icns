@@ -1,14 +1,23 @@
 /* eslint-disable */
 /**
- * Stub Convex pour dev sans déploiement.
- * `anyApi` est l'utilitaire officiel Convex permettant un `api.x.y.z`
- * compatible avec useQuery / useMutation (function references valides).
+ * Generated `api` utility.
  *
- * Sera remplacé par le vrai fichier généré par `npx convex dev` quand
- * l'instance Convex souveraine sera disponible.
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
  */
 
-import { anyApi } from "convex/server";
+import { anyApi, componentsGeneric } from "convex/server";
 
+/**
+ * A utility for referencing Convex functions in your app's API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
 export const api = anyApi;
 export const internal = anyApi;
+export const components = componentsGeneric();

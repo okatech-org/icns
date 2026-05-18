@@ -27,7 +27,7 @@ const UserSpaceLayout = () => {
     const handleLogout = async () => {
         try {
             await supabase.auth.signOut();
-            navigate("/auth");
+            navigate("/");
             toast({
                 title: "Déconnexion réussie",
                 description: "À bientôt !",

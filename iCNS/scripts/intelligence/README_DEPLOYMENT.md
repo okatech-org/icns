@@ -23,7 +23,7 @@ Le système de veille stratégique "Oeil de Lynx" est composé de 3 couches :
 
 ### Étape 1 : Récupérer la clé Service Role
 
-1. Ouvrez votre backend Lovable Cloud
+1. Ouvrez votre projet Supabase
 2. Allez dans **Settings** → **API**
 3. Copiez la clé **`service_role`** (⚠️ PAS la clé `anon`)
 

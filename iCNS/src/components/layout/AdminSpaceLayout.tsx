@@ -76,7 +76,7 @@ export const AdminSpaceLayout: React.FC<AdminSpaceLayoutProps> = ({
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        navigate('/auth');
+        navigate('/');
     };
 
     const toggleTheme = () => {
