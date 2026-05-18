@@ -1,0 +1,169 @@
+openapi: 3.0.3
+info:
+  title: iCNS — API Présidentielle
+  version: 0.1.0
+  description: |
+    API d'accès en lecture aux synthèses signées du SG-CNS, destinée à
+    l'application présidentielle (hors périmètre iCNS).
+
+    **Sécurité** :
+    - mTLS obligatoire (certificat client émis par la PKI souveraine).
+    - Bearer token OAuth2 court (15 min), renouvelable via le même endpoint
+      `/oauth/token`.
+    - Autorisation nominative : seuls les matricules inscrits dans
+      `api_presidentielle_autorisations` (gérée par le SG-CNS) peuvent
+      obtenir un token.
+    - Réponses signées (HMAC en dev / RSA-HSM en prod) — header
+      `X-iCNS-Signature`.
+    - Tous les appels sont journalisés dans un journal scellé spécifique
+      (`api_presidentielle_logs`) accessible uniquement RSSI / SG-CNS.
+
+  contact:
+    name: NTSAGUI Digital — équipe iCNS
+  license:
+    name: Propriété de la République Gabonaise
+
+servers:
+  - url: https://icns.gov.ga
+    description: Production — instance souveraine
+
+components:
+  securitySchemes:
+    mTLS:
+      type: mutualTLS
+      description: |
+        Certificat client X.509 émis par la PKI souveraine. Le LB injecte
+        les headers `X-Client-Cert-Serial`, `X-Client-Cert-Subject`,
+        `X-Client-Cert-Issuer` pour iCNS.
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token JWT 15 min issu de `/oauth/token`.
+
+  schemas:
+    TokenResponse:
+      type: object
+      required: [access_token, token_type, expires_in]
+      properties:
+        access_token: { type: string }
+        token_type: { type: string, enum: [Bearer] }
+        expires_in: { type: integer, example: 900 }
+
+    SyntheseSummary:
+      type: object
+      properties:
+        id: { type: string }
+        reference: { type: string, example: "SYN/2026/CNS/SD/0042" }
+        classification: { type: string, enum: [DR, CD, SD, TSD] }
+        signeParSgAt: { type: integer, description: "millis epoch" }
+        transmisePresidenceAt: { type: integer, nullable: true }
+
+    SyntheseDetail:
+      allOf:
+        - $ref: '#/components/schemas/SyntheseSummary'
+        - type: object
+          properties:
+            encryptedTitre: { type: string }
+            encryptedCorps: { type: string }
+            dossiersSources:
+              type: array
+              items:
+                type: object
+                properties:
+                  dossierId: { type: string }
+                  extraitChiffre: { type: string, nullable: true }
+
+    InstructionRequest:
+      type: object
+      required: [texte]
+      properties:
+        texte: { type: string, maxLength: 4000 }
+
+paths:
+  /api-presidentielle/oauth/token:
+    post:
+      summary: Émission d'un access token OAuth2
+      security: [{ mTLS: [] }]
+      responses:
+        '200':
+          description: Token émis (15 min)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '401':
+          description: mTLS manquant ou issuer non autorisé
+        '403':
+          description: Matricule non autorisé par le SG-CNS
+
+  /api-presidentielle/syntheses:
+    get:
+      summary: Liste des synthèses transmises à la Présidence
+      security: [{ mTLS: [], BearerAuth: [] }]
+      responses:
+        '200':
+          description: Liste paginée (max 100)
+          headers:
+            X-iCNS-Signature:
+              schema: { type: string }
+              description: Signature de la réponse pour vérification cliente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  syntheses:
+                    type: array
+                    items: { $ref: '#/components/schemas/SyntheseSummary' }
+
+  /api-presidentielle/syntheses/{id}:
+    get:
+      summary: Détail d'une synthèse (contenu chiffré)
+      security: [{ mTLS: [], BearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Synthèse
+          headers:
+            X-iCNS-Signature:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SyntheseDetail' }
+        '404':
+          description: Inconnue ou non transmise
+
+  /api-presidentielle/syntheses/{id}/acknowledge:
+    post:
+      summary: Accusé de consultation présidentielle
+      security: [{ mTLS: [], BearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Accusé enregistré
+
+  /api-presidentielle/syntheses/{id}/instruction:
+    post:
+      summary: Instruction présidentielle vers le SG-CNS
+      security: [{ mTLS: [], BearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InstructionRequest' }
+      responses:
+        '201':
+          description: Instruction transmise au SG-CNS via iCom

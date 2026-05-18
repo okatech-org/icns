@@ -1,0 +1,19 @@
+{
+  "name": "oeil-de-lynx-collector",
+  "version": "1.0.0",
+  "description": "WhatsApp monitoring bot for strategic intelligence gathering",
+  "main": "whatsapp_monitor.js",
+  "scripts": {
+    "start": "node whatsapp_monitor.js",
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": ["whatsapp", "monitoring", "intelligence", "supabase"],
+  "author": "Présidence du Gabon",
+  "license": "PROPRIETARY",
+  "dependencies": {
+    "whatsapp-web.js": "^1.25.0",
+    "qrcode-terminal": "^0.12.0",
+    "@supabase/supabase-js": "^2.48.1",
+    "dotenv": "^16.4.7"
+  }
+}

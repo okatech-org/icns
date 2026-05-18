@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "icns",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd iCNS && bun run dev"],
+      "port": 8080
+    },
+    {
+      "name": "executif-ga",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "executif.ga"],
+      "port": 8080
+    }
+  ]
+}

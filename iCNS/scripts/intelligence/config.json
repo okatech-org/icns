@@ -1,0 +1,145 @@
+{
+    "monitoring_config": {
+        "version": "1.0",
+        "last_updated": "2024-11-24",
+        "target_urls": [
+            "https://www.gabonreview.com/feed/",
+            "https://www.gabonmediatime.com/feed/",
+            "https://www.gabonactu.com/feed/",
+            "https://www.lenouveaugabon.com/rss",
+            "https://www.jeuneafrique.com/pays/gabon/feed/",
+            "https://www.rfi.fr/fr/tag/gabon/",
+            "https://www.agpgabon.ga/",
+            "https://infos241.com/",
+            "https://www.lunion-archives.org/",
+            "https://mondafrique.com/"
+        ],
+        "social_handles": {
+            "twitter_x": [
+                "PresidenceGabon",
+                "OliguiNguema",
+                "GouvGabon",
+                "CTRI_Officiel",
+                "RaymondNdongSima",
+                "MaysMouissi",
+                "LaurenceNdong",
+                "AssembleeNationaleGA",
+                "MinistereEconomieGabon",
+                "MinisterePetrole"
+            ],
+            "activistes": [
+                "HerveMomboKinga",
+                "TelesphoreObame",
+                "UrielAbaga"
+            ]
+        },
+        "facebook_groups": [
+            "Le Gabon d'abord",
+            "Infos Kinguélé",
+            "Tamtam Gabon",
+            "GABON POLITIQUE RÉALITÉ"
+        ],
+        "keywords_strict": [
+            "Gabon",
+            "Oligui",
+            "CTRI",
+            "Libreville",
+            "Port-Gentil",
+            "Franceville",
+            "Transition",
+            "Présidence"
+        ],
+        "keywords_contextual": [
+            "Coup d'état",
+            "Putsch",
+            "30 août",
+            "Grève",
+            "Manifestation",
+            "Émeute",
+            "Pénurie",
+            "Délestage",
+            "SEEG",
+            "Arrestation",
+            "Bavure",
+            "Décret",
+            "Référendum",
+            "Constitution",
+            "Dialogue National",
+            "Perenco",
+            "Eramet",
+            "Comilog",
+            "Assoukrè",
+            "Belinga",
+            "Manganèse",
+            "Dette publique",
+            "FMI",
+            "Banque Mondiale",
+            "Kobolo",
+            "Microbes",
+            "Braquage",
+            "Vie chère",
+            "Coupure d'eau",
+            "Coupure électricité"
+        ],
+        "hashtags": {
+            "incontournables": [
+                "#Gabon",
+                "#Team241",
+                "#Gabon241",
+                "#Libreville",
+                "#LBV"
+            ],
+            "politique": [
+                "#CTRI",
+                "#TransitionGabon",
+                "#Oligui",
+                "#CoupDeLiberation",
+                "#DialogueNational",
+                "#ReferendumGabon",
+                "#ConstitutionGabon"
+            ],
+            "social": [
+                "#VieChere",
+                "#Chomage",
+                "#Délestage",
+                "#Route",
+                "#Grève",
+                "#Bourses",
+                "#Mapane",
+                "#JusticePour"
+            ],
+            "economie": [
+                "#PetrolGabon",
+                "#Manganese",
+                "#ZoneNkok",
+                "#InvestGabon"
+            ]
+        },
+        "scraping_rules": {
+            "rss_interval_hours": 6,
+            "web_search_interval_hours": 12,
+            "max_articles_per_source": 10,
+            "filter_duplicates": true,
+            "require_gabon_context": true,
+            "priority_keywords_weight": 2.0
+        },
+        "alert_triggers": {
+            "critical_keywords": [
+                "coup d'état",
+                "putsch",
+                "émeute",
+                "insurrection",
+                "attentat",
+                "explosion"
+            ],
+            "high_priority_keywords": [
+                "manifestation",
+                "grève générale",
+                "arrestation",
+                "bavure",
+                "pénurie",
+                "délestage massif"
+            ]
+        }
+    }
+}

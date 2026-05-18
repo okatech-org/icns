@@ -1,0 +1,264 @@
+openapi: 3.0.3
+info:
+  title: iCNS — iDocument Internal API
+  version: 0.1.0
+  description: |
+    API interne d'iDocument — module satellite de stockage chiffré des pièces
+    iCNS. Consommée par iCNS (dossiers de renseignement), iCom (pièces jointes
+    aux communications) et iArchive (snapshots).
+
+    **Référence** : NTSAGUI/CNS/CDC/2026/001 §2.5 — Prompt 3.1.
+
+    **Authentification** : toutes les opérations exigent un JWT iCNS valide
+    dans le paramètre `jwt`. Le JWT est obtenu via le flux d'authentification
+    multi-facteurs carte agent + PIN + biométrie (cf. spec Prompt 2.1).
+
+    **Note d'implémentation** : la « surface » API d'iDocument est en réalité
+    des **mutations / queries Convex** consommées via la SDK Convex. Ce
+    document décrit la spec pour permettre :
+      - la validation par audit externe (ES-03.2) ;
+      - la génération de clients TypeScript pour les modules consommateurs
+        (iCom, iArchive) si besoin.
+
+  contact:
+    name: NTSAGUI Digital
+  license:
+    name: Propriété de la République Gabonaise
+    url: https://www.gouvernement.ga
+
+servers:
+  - url: https://icns.convex.cloud
+    description: Production (instance souveraine — à confirmer en M5)
+  - url: https://icns-staging.convex.cloud
+    description: Staging
+  - url: https://icns-dev.convex.cloud
+    description: Développement
+
+components:
+  securitySchemes:
+    JWTAuth:
+      type: apiKey
+      in: query
+      name: jwt
+      description: |
+        JWT iCNS (HS256 dev / RS256 HSM prod) obtenu via `authenticate`.
+        Inclus dans le payload Convex (pas dans un header HTTP).
+
+  schemas:
+    UploadUrl:
+      type: object
+      required: [uploadUrl]
+      properties:
+        uploadUrl:
+          type: string
+          format: uri
+
+    StorageId:
+      type: string
+      description: |
+        Identifiant opaque retourné par Convex Storage après upload réussi.
+
+    UploadRecordRequest:
+      type: object
+      required: [jwt, storageId, fileName, mimeType, fileSize, hashPlaintext, dekRawBase64]
+      properties:
+        jwt: { type: string }
+        storageId: { $ref: '#/components/schemas/StorageId' }
+        fileName: { type: string, maxLength: 255 }
+        mimeType:
+          type: string
+          enum:
+            - application/pdf
+            - image/png
+            - image/jpeg
+            - image/tiff
+            - application/msword
+            - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+            - application/vnd.ms-excel
+            - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+            - audio/mpeg
+            - audio/wav
+            - audio/ogg
+            - video/mp4
+            - text/plain
+        fileSize:
+          type: integer
+          maximum: 524288000
+          description: 500 Mo max par défaut. Configurable par type de pièce.
+        hashPlaintext:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: SHA-256 hex du plaintext (déchiffré).
+        dekRawBase64:
+          type: string
+          description: |
+            DEK AES-256 raw (32 octets) encodée en base64.
+            Transmise via TLS, immédiatement wrappée par la KEK côté serveur
+            et jamais persistée en clair.
+        dossierId:
+          type: string
+          nullable: true
+        typePiece:
+          type: string
+          nullable: true
+          enum:
+            - note
+            - fiche_individu
+            - fiche_organisation
+            - piece_probante
+            - transcription
+            - rapport
+            - piece_procedure
+            - avis
+        libelle:
+          type: string
+          nullable: true
+
+    UploadRecordResponse:
+      type: object
+      required: [docId, storageId, wrappedDEK]
+      properties:
+        docId: { type: string }
+        storageId: { $ref: '#/components/schemas/StorageId' }
+        wrappedDEK:
+          type: string
+          description: |
+            Pour confirmation. La DEK wrappée est aussi persistée côté
+            serveur dans la table iDocument.
+
+    DownloadResponse:
+      type: object
+      required: [downloadUrl, dekRawBase64, hashPlaintext]
+      properties:
+        downloadUrl: { type: string, format: uri }
+        dekRawBase64:
+          type: string
+          description: |
+            DEK déchiffrée à la volée pour ce download. Le client doit la
+            détruire de la mémoire après usage.
+        hashPlaintext: { type: string, pattern: '^[0-9a-f]{64}$' }
+        fileName: { type: string, nullable: true }
+        mimeType: { type: string, nullable: true }
+        fileSize: { type: integer, nullable: true }
+
+    DocumentMetadata:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        fileName: { type: string, nullable: true }
+        fileSize: { type: integer, nullable: true }
+        mimeType: { type: string, nullable: true }
+        isArchived: { type: boolean }
+        status: { type: string }
+        version: { type: integer, nullable: true }
+        hashPlaintext: { type: string, nullable: true, pattern: '^[0-9a-f]{64}$' }
+        isV2: { type: boolean, description: 'true pour les documents iCNS durcis' }
+
+    IntegrityCheck:
+      type: object
+      required: [docId, ok]
+      properties:
+        docId: { type: string }
+        ok: { type: boolean }
+        detail: { type: string, nullable: true }
+
+paths:
+  /idocument.upload.generateUploadUrl:
+    post:
+      summary: Génère une URL d'upload directe Convex Storage
+      security: [{ JWTAuth: [] }]
+      responses:
+        '200':
+          description: URL d'upload signée valide pour ~1h
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UploadUrl' }
+        '401':
+          description: JWT invalide
+
+  /idocument.upload.recordUpload:
+    post:
+      summary: Enregistre les métadonnées d'un fichier uploadé + wrappe la DEK
+      security: [{ JWTAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UploadRecordRequest' }
+      responses:
+        '200':
+          description: Fichier enregistré
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UploadRecordResponse' }
+        '400':
+          description: |
+            - MIME type non autorisé
+            - Taille > 500 Mo
+            - DEK longueur invalide
+            - Hash format invalide
+        '401':
+          description: JWT invalide
+
+  /idocument.download.getDocumentMetadata:
+    post:
+      summary: Métadonnées (sans déchiffrement)
+      security: [{ JWTAuth: [] }]
+      responses:
+        '200':
+          description: Métadonnées
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DocumentMetadata' }
+
+  /idocument.download.requestDownload:
+    post:
+      summary: Demande de téléchargement (avec contrôle d'habilitation)
+      security: [{ JWTAuth: [] }]
+      responses:
+        '200':
+          description: |
+            URL signée + DEK déchiffrée. Toute consultation SD/TSD est aussi
+            tracée dans `consultations_dossier` (EF-04.5).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DownloadResponse' }
+        '403':
+          description: Habilitation insuffisante
+        '404':
+          description: Document introuvable
+
+  /idocument.integrity.listDocumentsForAudit:
+    get:
+      summary: Liste des documents à vérifier (RSSI / auditeur)
+      security: [{ JWTAuth: [] }]
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, default: 100, maximum: 1000 }
+      responses:
+        '200':
+          description: Liste paginée
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DocumentMetadata' }
+        '403':
+          description: Rôle insuffisant (RSSI / auditeur attendu)
+
+  /idocument.integrity.recordIntegrityCheck:
+    post:
+      summary: Enregistre le résultat d'une vérification d'intégrité
+      security: [{ JWTAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/IntegrityCheck' }
+      responses:
+        '200':
+          description: Résultat enregistré (et tracé dans journal_audit)
+        '403':
+          description: Rôle insuffisant

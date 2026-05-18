@@ -1,0 +1,48 @@
+# Sous-projets indépendants (ont leur propre dépôt git ailleurs)
+mairie.ga/
+digitalium.io/
+executif.ga/
+gabon-diplomatie/
+
+# Backup du .git interne d'iCNS (préservé après déconnexion du repo iCNS séparé)
+**/.git.bak/
+
+# Secrets et fichiers d'environnement
+.env
+.env.local
+.env.*.local
+*.local
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+dist-ssr/
+build/
+.next/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

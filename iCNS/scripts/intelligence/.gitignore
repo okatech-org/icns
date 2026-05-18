@@ -1,0 +1,12 @@
+# Environment variables avec credentials sensibles
+.env
+
+# Session WhatsApp
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.log
