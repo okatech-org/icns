@@ -32,6 +32,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { useTheme } from "next-themes";
 import { IAstedChatModal } from '@/components/iasted/IAstedChatModal';
 import IAstedButtonFull from "@/components/iasted/IAstedButtonFull";
+import { Bot, Mail } from "lucide-react";
+import { IDocumentWorkspace } from '@/components/idocument/IDocumentWorkspace';
+import { ICorrespondanceSection } from '@/components/icorrespondance/ICorrespondanceSection';
+import { IAstedSection } from '@/components/iasted/IAstedSection';
+import { IAgendaSection } from '@/components/iagenda/IAgendaSection';
+import { ModuleNavButton } from '@/components/shared/ModuleNavButton';
 import { useRealtimeVoiceWebRTC } from '@/hooks/useRealtimeVoiceWebRTC';
 import { generateSystemPrompt } from "@/utils/generateSystemPrompt";
 import { useUserContext } from "@/hooks/useUserContext";
@@ -62,6 +68,10 @@ const SecretariatGeneralSpace = () => {
     { id: 'decrees', label: 'Décrets', icon: FileText },
     { id: 'reviews', label: 'Juridique', icon: Scale },
     { id: 'archives_list', label: 'Archives', icon: Archive },
+    { id: 'idocument', label: 'iDocument', icon: FileText },
+    { id: 'icorrespondance', label: 'iCorrespondance', icon: Mail },
+    { id: 'iasted-full', label: 'iAsted', icon: Bot },
+    { id: 'iagenda', label: 'iAgenda', icon: Calendar },
   ];
 
   // Dialog states
@@ -416,7 +426,7 @@ const SecretariatGeneralSpace = () => {
       </div>
 
       {/* Archives */}
-      <div className="mb-4 flex-1">
+      <div className="mb-4">
         <button
           onClick={() => toggleSection('archives')}
           className="neu-raised flex items-center justify-between w-full text-xs font-semibold text-primary mb-3 tracking-wider px-3 py-2 rounded-lg transition-all hover:shadow-neo-md"
@@ -438,6 +448,43 @@ const SecretariatGeneralSpace = () => {
             </button>
           </nav>
         )}
+      </div>
+
+      {/* Modules iCNS */}
+      <div className="mb-4 flex-1">
+        <p className="px-3 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
+          MODULES iCNS
+        </p>
+        <nav className="space-y-1 ml-2">
+          <ModuleNavButton
+            id="idocument"
+            label="iDocument"
+            icon={FileText}
+            activeSection={activeSection}
+            onClick={() => setActiveSection("idocument")}
+          />
+          <ModuleNavButton
+            id="icorrespondance"
+            label="iCorrespondance"
+            icon={Mail}
+            activeSection={activeSection}
+            onClick={() => setActiveSection("icorrespondance")}
+          />
+          <ModuleNavButton
+            id="iasted-full"
+            label="iAsted"
+            icon={Bot}
+            activeSection={activeSection}
+            onClick={() => setActiveSection("iasted-full")}
+          />
+          <ModuleNavButton
+            id="iagenda"
+            label="iAgenda"
+            icon={Calendar}
+            activeSection={activeSection}
+            onClick={() => setActiveSection("iagenda")}
+          />
+        </nav>
       </div>
     </>
   );
@@ -855,6 +902,28 @@ const SecretariatGeneralSpace = () => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Modules iCNS — sections inline */}
+      {activeSection === "idocument" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <IDocumentWorkspace />
+        </div>
+      )}
+      {activeSection === "icorrespondance" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <ICorrespondanceSection />
+        </div>
+      )}
+      {activeSection === "iasted-full" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <IAstedSection />
+        </div>
+      )}
+      {activeSection === "iagenda" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <IAgendaSection />
         </div>
       )}
     </AdminSpaceLayout>

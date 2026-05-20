@@ -7,6 +7,7 @@ import React, { Suspense, lazy } from "react";
 import { ThemeProvider } from "next-themes";
 import { LoadingScreen } from "@/components/ErrorBoundary";
 import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
+import { IAstedProvider } from "@/contexts/IAstedContext";
 
 // Lazy load all routes for better performance
 const IndexFallback = lazy(() => import("./pages/IndexFallback"));
@@ -66,6 +67,7 @@ const App = () => (
           v7_relativeSplatPath: true
         }}>
           <SuperAdminProvider>
+            <IAstedProvider>
             <Suspense fallback={<LoadingScreen />}>
               <Routes>
                 <Route path="/" element={<IndexFallback />} />
@@ -98,6 +100,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            </IAstedProvider>
           </SuperAdminProvider>
         </BrowserRouter>
       </TooltipProvider>

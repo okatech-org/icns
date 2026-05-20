@@ -33,6 +33,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { useTheme } from "next-themes";
 import IAstedButtonFull from "@/components/iasted/IAstedButtonFull";
 import { IAstedChatModal } from '@/components/iasted/IAstedChatModal';
+import { Bot, Inbox, Calendar as CalendarIcon, Mail } from "lucide-react";
+import { IDocumentWorkspace } from '@/components/idocument/IDocumentWorkspace';
+import { ICorrespondanceSection } from '@/components/icorrespondance/ICorrespondanceSection';
+import { IAstedSection } from '@/components/iasted/IAstedSection';
+import { IAgendaSection } from '@/components/iagenda/IAgendaSection';
+import { ModuleNavButton } from '@/components/shared/ModuleNavButton';
 import { useRealtimeVoiceWebRTC } from '@/hooks/useRealtimeVoiceWebRTC';
 import { generateSystemPrompt } from "@/utils/generateSystemPrompt";
 import { useUserContext } from "@/hooks/useUserContext";
@@ -66,6 +72,10 @@ const DgssSpace = () => {
         { id: 'reports', label: 'Rapports', icon: FileText },
         { id: 'threats', label: 'Menaces', icon: AlertTriangle },
         { id: 'targets', label: 'Cibles', icon: Radar },
+        { id: 'idocument', label: 'iDocument', icon: FileText },
+        { id: 'icorrespondance', label: 'iCorrespondance', icon: Mail },
+        { id: 'iasted-full', label: 'iAsted', icon: Bot },
+        { id: 'iagenda', label: 'iAgenda', icon: CalendarIcon },
     ];
 
     const toggleSection = (section: string) => {
@@ -460,7 +470,7 @@ const DgssSpace = () => {
             </div>
 
             {/* Operations */}
-            <div className="mb-4 flex-1">
+            <div className="mb-4">
                 <button
                     onClick={() => toggleSection('operations')}
                     className="neu-raised flex items-center justify-between w-full text-xs font-semibold text-primary mb-3 tracking-wider px-3 py-2 rounded-lg transition-all hover:shadow-neo-md"
@@ -482,6 +492,43 @@ const DgssSpace = () => {
                         </button>
                     </nav>
                 )}
+            </div>
+
+            {/* Modules iCNS */}
+            <div className="mb-4 flex-1">
+                <p className="px-3 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
+                    MODULES iCNS
+                </p>
+                <nav className="space-y-1 ml-2">
+                    <ModuleNavButton
+                        id="idocument"
+                        label="iDocument"
+                        icon={FileText}
+                        activeSection={activeSection}
+                        onClick={() => setActiveSection("idocument")}
+                    />
+                    <ModuleNavButton
+                        id="icorrespondance"
+                        label="iCorrespondance"
+                        icon={Mail}
+                        activeSection={activeSection}
+                        onClick={() => setActiveSection("icorrespondance")}
+                    />
+                    <ModuleNavButton
+                        id="iasted-full"
+                        label="iAsted"
+                        icon={Bot}
+                        activeSection={activeSection}
+                        onClick={() => setActiveSection("iasted-full")}
+                    />
+                    <ModuleNavButton
+                        id="iagenda"
+                        label="iAgenda"
+                        icon={CalendarIcon}
+                        activeSection={activeSection}
+                        onClick={() => setActiveSection("iagenda")}
+                    />
+                </nav>
             </div>
         </>
     );
@@ -983,6 +1030,28 @@ const DgssSpace = () => {
                             })}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Modules iCNS — sections inline */}
+            {activeSection === "idocument" && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <IDocumentWorkspace />
+                </div>
+            )}
+            {activeSection === "icorrespondance" && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <ICorrespondanceSection />
+                </div>
+            )}
+            {activeSection === "iasted-full" && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <IAstedSection />
+                </div>
+            )}
+            {activeSection === "iagenda" && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <IAgendaSection />
                 </div>
             )}
 

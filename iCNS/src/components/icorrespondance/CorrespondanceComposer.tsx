@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { UploadZone } from "@/components/shared/UploadZone";
+import { ContactPicker, demoEmailForPersona } from "@/components/shared/ContactPicker";
 import { useCreateICorrFolder, useAttachICorrDocument } from "@/hooks/useICorrespondance";
 import { CORRESPONDENCE_TYPES } from "@/types/icorrespondance";
+import { useCurrentPersona } from "@/auth/useCurrentPersona";
 import { toast } from "sonner";
 
 interface CorrespondanceComposerProps {
@@ -21,6 +23,7 @@ interface CorrespondanceComposerProps {
 export function CorrespondanceComposer({ open, onOpenChange }: CorrespondanceComposerProps) {
     const [name, setName] = useState("");
     const [correspondenceType, setCorrespondenceType] = useState("lettre");
+    const [recipientMatricule, setRecipientMatricule] = useState<string | null>(null);
     const [recipientName, setRecipientName] = useState("");
     const [recipientOrg, setRecipientOrg] = useState("");
     const [recipientEmail, setRecipientEmail] = useState("");
@@ -36,12 +39,14 @@ export function CorrespondanceComposer({ open, onOpenChange }: CorrespondanceCom
         content_hash: string;
     } | null>(null);
 
+    const currentPersona = useCurrentPersona();
     const createFolder = useCreateICorrFolder();
     const attachDocument = useAttachICorrDocument();
 
     const reset = () => {
         setName("");
         setCorrespondenceType("lettre");
+        setRecipientMatricule(null);
         setRecipientName("");
         setRecipientOrg("");
         setRecipientEmail("");
@@ -129,12 +134,37 @@ export function CorrespondanceComposer({ open, onOpenChange }: CorrespondanceCom
                         </Select>
                     </div>
 
+                    <div className="grid gap-2">
+                        <Label>Destinataire iCNS</Label>
+                        <ContactPicker
+                            value={recipientMatricule}
+                            onChange={(p) => {
+                                if (p) {
+                                    setRecipientMatricule(p.matricule);
+                                    setRecipientName(p.prenomNom);
+                                    setRecipientOrg(p.serviceLabel);
+                                    setRecipientEmail(demoEmailForPersona(p));
+                                } else {
+                                    setRecipientMatricule(null);
+                                    setRecipientName("");
+                                    setRecipientOrg("");
+                                    setRecipientEmail("");
+                                }
+                            }}
+                            excludeMatricules={currentPersona ? [currentPersona.matricule] : undefined}
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                            Sélectionnez un agent du catalogue iCNS (47 personas) ou
+                            laissez vide pour un destinataire externe (à renseigner ci-dessous).
+                        </p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="rec-name">Destinataire</Label>
+                            <Label htmlFor="rec-name">Nom (override)</Label>
                             <Input
                                 id="rec-name"
-                                placeholder="Nom"
+                                placeholder="Nom du destinataire"
                                 value={recipientName}
                                 onChange={(e) => setRecipientName(e.target.value)}
                             />
@@ -143,7 +173,7 @@ export function CorrespondanceComposer({ open, onOpenChange }: CorrespondanceCom
                             <Label htmlFor="rec-org">Organisation</Label>
                             <Input
                                 id="rec-org"
-                                placeholder="Ministere, institution..."
+                                placeholder="Ministère, institution…"
                                 value={recipientOrg}
                                 onChange={(e) => setRecipientOrg(e.target.value)}
                             />
@@ -151,7 +181,7 @@ export function CorrespondanceComposer({ open, onOpenChange }: CorrespondanceCom
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="rec-email">Email du destinataire (pour envoi externe)</Label>
+                        <Label htmlFor="rec-email">Email du destinataire</Label>
                         <Input
                             id="rec-email"
                             type="email"

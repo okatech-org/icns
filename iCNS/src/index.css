@@ -2,6 +2,207 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ════════════════════════════════════════════════════════════════════
+   DASH-V2 — Design system backoffice gabon-diplomatie porte sous .dash-v2
+   Coexiste avec le neumorphique iCNS existant (espaces utilisateur).
+   Active sur l'iCNS Workspace + les 4 modules iDocument / iCorrespondance
+   / iAsted / iAgenda.
+   ════════════════════════════════════════════════════════════════════ */
+.dash-v2 {
+    /* Surfaces warm-beige */
+    --v2-bg: #ffffff;
+    --v2-bg-deep: #efece4;
+    --v2-surface: #f7f6f2;
+    --v2-surface-2: #fbfaf6;
+    --v2-surface-3: #f3efe4;
+    --v2-border-strong: #d2cdbf;
+    --v2-border-soft: #efebe0;
+
+    /* Texte achromatique */
+    --v2-text: hsl(0 0% 10%);
+    --v2-text-muted: hsl(0 0% 40%);
+    --v2-text-faint: hsl(0 0% 55%);
+
+    /* Drapeau gabonais (V2) */
+    --v2-gabon-blue: #0b4f9c;
+    --v2-gabon-blue-deep: #073871;
+    --v2-gabon-blue-tint: #e7eff9;
+    --v2-gabon-blue-soft: #f2f6fc;
+    --v2-gabon-green: #0a8a3b;
+    --v2-gabon-green-tint: #e3f3e9;
+    --v2-gabon-green-soft: #f1f8f3;
+    --v2-gabon-yellow: #f1c531;
+    --v2-gabon-yellow-tint: #fbf2cf;
+
+    /* Semantique */
+    --v2-success: #157a3d;
+    --v2-success-tint: #e3f1e8;
+    --v2-warning: #a16e00;
+    --v2-warning-tint: #faedca;
+    --v2-danger: #b3261e;
+    --v2-danger-tint: #fbe9e7;
+    --v2-purple: #6f51c4;
+    --v2-purple-tint: #ece6f7;
+    --v2-cyan: #1e7d9b;
+    --v2-cyan-tint: #d9eef5;
+    --v2-teal: #0f7f7a;
+    --v2-teal-tint: #d4ebe9;
+
+    --v2-radius-sm: 6px;
+    --v2-radius: 10px;
+    --v2-radius-lg: 14px;
+
+    background: var(--v2-bg);
+    color: var(--v2-text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.dark .dash-v2,
+.dash-v2.dark {
+    --v2-bg: #1c1a14;
+    --v2-bg-deep: #0a0907;
+    --v2-surface: #14130f;
+    --v2-surface-2: #24211a;
+    --v2-surface-3: #2c2820;
+    --v2-border-strong: #3a3528;
+    --v2-border-soft: #221f18;
+
+    --v2-text: hsl(0 0% 98%);
+    --v2-text-muted: hsl(0 0% 65%);
+    --v2-text-faint: hsl(0 0% 50%);
+
+    --v2-gabon-blue-tint: rgba(11, 79, 156, 0.18);
+    --v2-gabon-green-tint: rgba(10, 138, 59, 0.18);
+    --v2-gabon-yellow-tint: rgba(241, 197, 49, 0.18);
+    --v2-success-tint: rgba(21, 122, 61, 0.18);
+    --v2-warning-tint: rgba(161, 110, 0, 0.22);
+    --v2-danger-tint: rgba(179, 38, 30, 0.20);
+    --v2-purple-tint: rgba(111, 81, 196, 0.20);
+    --v2-cyan-tint: rgba(30, 125, 155, 0.22);
+    --v2-teal-tint: rgba(15, 127, 122, 0.22);
+}
+
+/* Override des tokens shadcn (border, card, etc.) sur le scope .dash-v2 */
+.dash-v2 {
+    --background: 36 27% 96%;
+    --foreground: 0 0% 10%;
+    --card: 40 26% 97%;
+    --card-foreground: 0 0% 10%;
+    --popover: 40 26% 97%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 211 87% 33%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 26% 97%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 40 30% 95%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 211 87% 33%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 71% 41%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 22% 91%;
+    --input: 40 19% 80%;
+    --ring: 211 87% 33%;
+}
+
+.dark .dash-v2 {
+    --background: 38 17% 9%;
+    --foreground: 0 0% 98%;
+    --card: 36 14% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 36 14% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 211 87% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 36 14% 12%;
+    --secondary-foreground: 0 0% 65%;
+    --muted: 38 14% 13%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 211 87% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 71% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 38 13% 14%;
+    --input: 38 13% 18%;
+    --ring: 211 87% 50%;
+}
+
+/* Composants V2 */
+.dash-v2 .v2-flat-card {
+    background: var(--v2-surface);
+    border: 1px solid var(--v2-border-soft);
+    border-radius: var(--v2-radius-lg);
+    overflow: hidden;
+}
+
+.dash-v2 .v2-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--v2-radius);
+    background: var(--v2-surface);
+    border: 1px solid var(--v2-border-strong);
+    display: grid;
+    place-items: center;
+    color: var(--v2-text);
+    flex-shrink: 0;
+}
+
+.dash-v2 .v2-stripe {
+    height: 3px;
+    background: linear-gradient(90deg,
+            var(--v2-gabon-green) 33.33%,
+            var(--v2-gabon-yellow) 33.33%,
+            var(--v2-gabon-yellow) 66.66%,
+            var(--v2-gabon-blue) 66.66%);
+    border-radius: 2px;
+}
+
+/* Suppression de toutes les ombres pour le scope V2 (flat design) */
+.dash-v2 *,
+.dash-v2 *::before,
+.dash-v2 *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+/* Scrollbar V2 */
+.dash-v2 ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.dash-v2 ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dash-v2 ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+}
+
+.dark .dash-v2 ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Animations partagees */
+@keyframes v2-fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dash-v2 .v2-animate-fade-in-up {
+    animation: v2-fade-in-up 0.4s ease-out forwards;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

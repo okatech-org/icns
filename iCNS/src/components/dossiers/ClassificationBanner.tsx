@@ -12,11 +12,14 @@ const CLASS_LABEL: Record<Classification, string> = {
   TSD: "TRÈS SECRET DÉFENSE",
 };
 
+// Palette rouge opaque subtile (aligne sur les tokens danger du design system).
+// Garde une progression d'intensite : DR (ambre clair) < CD (rose-rouge) <
+// SD (rouge muted) < TSD (rouge fonce opaque).
 const CLASS_COLOR: Record<Classification, string> = {
-  DR: "bg-amber-500 text-black",
-  CD: "bg-orange-600 text-white",
-  SD: "bg-red-700 text-white",
-  TSD: "bg-fuchsia-900 text-white border-2 border-amber-300",
+  DR: "bg-amber-100/95 text-amber-900 border-y border-amber-300/60 dark:bg-amber-950/80 dark:text-amber-100 dark:border-amber-800/60",
+  CD: "bg-rose-100/95 text-rose-900 border-y border-rose-300/60 dark:bg-rose-950/80 dark:text-rose-100 dark:border-rose-800/60",
+  SD: "bg-red-200/90 text-red-900 border-y border-red-400/60 dark:bg-red-950/85 dark:text-red-100 dark:border-red-800/70",
+  TSD: "bg-[#7a1f1c]/95 text-white border-y border-[#a52a2a]/40 dark:bg-[#5a1818]/95 dark:text-red-50 dark:border-red-900/60",
 };
 
 export interface ClassificationBannerProps {

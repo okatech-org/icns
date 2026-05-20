@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   LogOut, Mail, Plus, Search, Filter, ScanLine, Moon, Sun, CheckCircle2,
-  LayoutDashboard, Inbox, FileText, Archive, Settings, Menu, ChevronRight
+  LayoutDashboard, Inbox, FileText, Archive, Settings, Menu, ChevronRight,
+  Bot, Calendar as CalendarIcon
 } from "lucide-react";
 import emblemGabon from "@/assets/emblem_gabon.png";
 import { useToast } from "@/components/ui/use-toast";
@@ -30,6 +31,11 @@ import { AdminSpaceLayout } from '@/components/layout/AdminSpaceLayout';
 import { useSuperAdmin } from "@/contexts/SuperAdminContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { courrierService } from "@/services/courrierService";
+import { IDocumentWorkspace } from '@/components/idocument/IDocumentWorkspace';
+import { ICorrespondanceSection } from '@/components/icorrespondance/ICorrespondanceSection';
+import { IAstedSection } from '@/components/iasted/IAstedSection';
+import { IAgendaSection } from '@/components/iagenda/IAgendaSection';
+import { ModuleNavButton } from '@/components/shared/ModuleNavButton';
 
 const ServiceCourriersSpace = () => {
   const navigate = useNavigate();
@@ -48,6 +54,10 @@ const ServiceCourriersSpace = () => {
     { id: 'incoming', label: 'Reçus', icon: Inbox },
     { id: 'processing', label: 'Traitement', icon: FileText },
     { id: 'archives', label: 'Archives', icon: Archive },
+    { id: 'idocument', label: 'iDocument', icon: FileText },
+    { id: 'icorrespondance', label: 'iCorrespondance', icon: Mail },
+    { id: 'iasted-full', label: 'iAsted', icon: Bot },
+    { id: 'iagenda', label: 'iAgenda', icon: CalendarIcon },
   ];
 
   // Selection state for Split View
@@ -302,6 +312,39 @@ const ServiceCourriersSpace = () => {
         count={mails.filter(m => m.status === 'en_traitement').length}
       />
       <NavButton id="archives" icon={Archive} label="Archives" />
+
+      <div className="my-4 border-t border-border/50" />
+      <p className="px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Modules iCNS
+      </p>
+      <ModuleNavButton
+        id="idocument"
+        label="iDocument"
+        icon={FileText}
+        activeSection={activeSection}
+        onClick={() => setActiveSection("idocument")}
+      />
+      <ModuleNavButton
+        id="icorrespondance"
+        label="iCorrespondance"
+        icon={Mail}
+        activeSection={activeSection}
+        onClick={() => setActiveSection("icorrespondance")}
+      />
+      <ModuleNavButton
+        id="iasted-full"
+        label="iAsted"
+        icon={Bot}
+        activeSection={activeSection}
+        onClick={() => setActiveSection("iasted-full")}
+      />
+      <ModuleNavButton
+        id="iagenda"
+        label="iAgenda"
+        icon={CalendarIcon}
+        activeSection={activeSection}
+        onClick={() => setActiveSection("iagenda")}
+      />
     </nav>
   );
 
@@ -316,7 +359,11 @@ const ServiceCourriersSpace = () => {
         activeSection === 'dashboard' ? 'Tableau de bord' :
           activeSection === 'incoming' ? 'Courriers Reçus' :
             activeSection === 'processing' ? 'En Traitement' :
-              activeSection === 'archives' ? 'Archives' : 'Service Courriers'
+              activeSection === 'archives' ? 'Archives' :
+                activeSection === 'idocument' ? 'iDocument' :
+                  activeSection === 'icorrespondance' ? 'iCorrespondance' :
+                    activeSection === 'iasted-full' ? 'Assistant iAsted' :
+                      activeSection === 'iagenda' ? 'iAgenda' : 'Service Courriers'
       }
       headerSubtitle={new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
       customSidebarNav={customSidebarNav}
@@ -578,6 +625,28 @@ const ServiceCourriersSpace = () => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Modules iCNS — sections inline */}
+      {activeSection === "idocument" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <IDocumentWorkspace />
+        </div>
+      )}
+      {activeSection === "icorrespondance" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <ICorrespondanceSection />
+        </div>
+      )}
+      {activeSection === "iasted-full" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <IAstedSection />
+        </div>
+      )}
+      {activeSection === "iagenda" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <IAgendaSection />
         </div>
       )}
     </AdminSpaceLayout>

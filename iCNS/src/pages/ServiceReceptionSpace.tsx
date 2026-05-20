@@ -24,7 +24,8 @@ import {
   UserPlus,
   CreditCard,
   Mail,
-  History
+  History,
+  Bot
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,11 @@ import { receptionService } from "@/services/receptionService";
 import { NavItem } from '@/components/layout/MobileBottomNav';
 import { AdminSpaceLayout } from '@/components/layout/AdminSpaceLayout';
 import { useSuperAdmin } from "@/contexts/SuperAdminContext";
+import { IDocumentWorkspace } from '@/components/idocument/IDocumentWorkspace';
+import { ICorrespondanceSection } from '@/components/icorrespondance/ICorrespondanceSection';
+import { IAstedSection } from '@/components/iasted/IAstedSection';
+import { IAgendaSection } from '@/components/iagenda/IAgendaSection';
+import { ModuleNavButton } from '@/components/shared/ModuleNavButton';
 
 const ServiceReceptionSpace = () => {
   const navigate = useNavigate();
@@ -65,6 +71,10 @@ const ServiceReceptionSpace = () => {
     { id: 'visitors', label: 'Visiteurs', icon: Users },
     { id: 'accreditations', label: 'Accréditations', icon: CreditCard },
     { id: 'mail-ingestion', label: 'Courrier', icon: Mail },
+    { id: 'idocument', label: 'iDocument', icon: FileText },
+    { id: 'icorrespondance', label: 'iCorrespondance', icon: Mail },
+    { id: 'iasted-full', label: 'iAsted', icon: Bot },
+    { id: 'iagenda', label: 'iAgenda', icon: Calendar },
   ];
 
   const [selectedVoice, setSelectedVoice] = useState<'echo' | 'ash' | 'shimmer'>('echo');
@@ -407,7 +417,7 @@ const ServiceReceptionSpace = () => {
       </div>
 
       {/* Courrier */}
-      <div className="mb-4 flex-1">
+      <div className="mb-4">
         <button
           onClick={() => toggleSection('courrier')}
           className="neu-raised flex items-center justify-between w-full text-xs font-semibold text-primary mb-3 tracking-wider px-3 py-2 rounded-lg transition-all hover:shadow-neo-md"
@@ -439,6 +449,43 @@ const ServiceReceptionSpace = () => {
             </button>
           </nav>
         )}
+      </div>
+
+      {/* Modules iCNS */}
+      <div className="mb-4 flex-1">
+        <p className="px-3 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
+          MODULES iCNS
+        </p>
+        <nav className="space-y-1 ml-2">
+          <ModuleNavButton
+            id="idocument"
+            label="iDocument"
+            icon={FileText}
+            activeSection={activeSection}
+            onClick={() => setActiveSection("idocument")}
+          />
+          <ModuleNavButton
+            id="icorrespondance"
+            label="iCorrespondance"
+            icon={Mail}
+            activeSection={activeSection}
+            onClick={() => setActiveSection("icorrespondance")}
+          />
+          <ModuleNavButton
+            id="iasted-full"
+            label="iAsted"
+            icon={Bot}
+            activeSection={activeSection}
+            onClick={() => setActiveSection("iasted-full")}
+          />
+          <ModuleNavButton
+            id="iagenda"
+            label="iAgenda"
+            icon={Calendar}
+            activeSection={activeSection}
+            onClick={() => setActiveSection("iagenda")}
+          />
+        </nav>
       </div>
     </>
   );
@@ -744,6 +791,28 @@ const ServiceReceptionSpace = () => {
             <p className="text-muted-foreground">Suivi des plis scannés et statuts</p>
           </div>
           <ServiceReceptionHistory />
+        </div>
+      )}
+
+      {/* Modules iCNS — sections inline */}
+      {activeSection === "idocument" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <IDocumentWorkspace />
+        </div>
+      )}
+      {activeSection === "icorrespondance" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <ICorrespondanceSection />
+        </div>
+      )}
+      {activeSection === "iasted-full" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <IAstedSection />
+        </div>
+      )}
+      {activeSection === "iagenda" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <IAgendaSection />
         </div>
       )}
 

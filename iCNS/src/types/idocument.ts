@@ -1,8 +1,68 @@
 // Types iDocument — gestion electronique de documents (GED) executif
 // Reflete la schema Supabase 20260504120000_idoc_create_module.sql
 
+import type { Classification, RoleICNS } from "@/data/icns-personas";
+
 export type IDocStatus = "draft" | "published" | "archived" | "trashed";
 export type IDocFolderStatus = "active" | "trashed";
+
+// ──────────────────────────────────────────────────────────────────────
+// Coffre documentaire iCNS — modèle client (Phase démo Zustand)
+// Aligne sur le système de sécurité iCNS : classification DR/CD/SD/TSD
+// et règle d'accès « habilitation_user ≥ classification_dossier ».
+// ──────────────────────────────────────────────────────────────────────
+
+export type VaultVisibility =
+  | { kind: "private" }
+  | {
+      kind: "shared";
+      matricules: string[];
+      roles: RoleICNS[];
+      services: string[];
+    }
+  | { kind: "service"; service: string }
+  | { kind: "cns_wide" };
+
+export type VaultDocumentSource =
+  | "correspondance"
+  | "upload"
+  | "inbound-email"
+  | "scan";
+
+export interface VaultFolder {
+  id: string;
+  name: string;
+  parentFolderId: string | null;
+  ownerMatricule: string;
+  classification: Classification;
+  visibility: VaultVisibility;
+  tags: string[];
+  isSystem: boolean;
+  createdAt: number;
+  updatedAt: number;
+  documentCount: number;
+  status: IDocFolderStatus;
+}
+
+export interface VaultDocument {
+  id: string;
+  title: string;
+  folderId: string | null;
+  ownerMatricule: string;
+  classification: Classification;
+  visibility: VaultVisibility;
+  tags: string[];
+  status: IDocStatus;
+  source: VaultDocumentSource;
+  createdAt: number;
+  updatedAt: number;
+  size?: number;
+  mimeType?: string;
+  /** URL d'aperçu (blob: en mode démo, URL signée Supabase en prod). */
+  fileUrl?: string;
+  /** Chemin de stockage backend (non utilisé en mode démo). */
+  storagePath?: string;
+}
 
 export interface IDocFolder {
     id: string;
