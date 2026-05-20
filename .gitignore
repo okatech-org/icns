@@ -37,6 +37,9 @@ out/
 .DS_Store
 Thumbs.db
 
+# Claude Code worktrees (etats temporaires des sous-agents)
+.claude/worktrees/
+
 # Éditeurs
 .vscode/*
 !.vscode/extensions.json
