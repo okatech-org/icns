@@ -3,6 +3,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import { useTheme } from "next-themes";
 import { useICNSAuth } from "@/auth/useICNSAuth";
 import { ClassificationBanner } from "@/components/dossiers/ClassificationBanner";
 import { DossierList } from "@/components/dossiers/DossierList";
@@ -16,18 +17,31 @@ import {
   AuditModule,
   CelluleModule,
 } from "@/components/icns-workspace/WorkspaceModules";
+import { IDocumentWorkspace } from "@/components/idocument/IDocumentWorkspace";
+import { ICorrespondanceSection } from "@/components/icorrespondance/ICorrespondanceSection";
+import { IAstedSection } from "@/components/iasted/IAstedSection";
+import { IAgendaSection } from "@/components/iagenda/IAgendaSection";
+import IAstedButtonFull from "@/components/iasted/IAstedButtonFull";
+import { IAstedPopup } from "@/components/iasted/IAstedPopup";
+import { useSuperAdmin } from "@/contexts/SuperAdminContext";
+import { usePublishPageContext, type PageContextSnapshot } from "@/lib/iasted";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
   Archive,
+  Bot,
+  Calendar,
   ChevronRight,
+  FileText,
   Folder,
   LogOut,
   Mail,
+  Moon,
   Network,
   Settings,
   Shield,
   ShieldCheck,
+  Sun,
   UserCog,
 } from "lucide-react";
 import emblemGabon from "@/assets/emblem_gabon.png";
@@ -41,17 +55,25 @@ type ModuleKey =
   | "audit"
   | "admin"
   | "cellule"
-  | "archive";
+  | "archive"
+  | "idocument"
+  | "icorrespondance"
+  | "iasted"
+  | "iagenda";
 
+// Note : "dossiers" et "archive" sont absorbés par iDocument (qui inclut
+// l'arbre des dossiers de renseignement + iArchive en sous-onglet).
+// "icom" reste distinct car iCorrespondance gère le workflow d'approbation
+// alors qu'iCom gère les communications inter-services en temps réel.
 const MODULES_PAR_ROLE: Record<string, ModuleKey[]> = {
-  officier_traitant: ["dossiers", "icom"],
-  chef_section: ["dossiers", "icom"],
-  directeur_service: ["dossiers", "icom"],
-  analyste_cns: ["cellule", "dossiers", "icom"],
-  sg_cns: ["sg-cockpit", "dossiers", "icom", "archive"],
-  rssi: ["audit", "icom"],
-  auditeur: ["audit"],
-  admin_technique: ["admin"],
+  officier_traitant: ["idocument", "icorrespondance", "icom", "iasted", "iagenda"],
+  chef_section: ["idocument", "icorrespondance", "icom", "iasted", "iagenda"],
+  directeur_service: ["idocument", "icorrespondance", "icom", "iasted", "iagenda"],
+  analyste_cns: ["cellule", "idocument", "icorrespondance", "icom", "iasted", "iagenda"],
+  sg_cns: ["sg-cockpit", "idocument", "icorrespondance", "icom", "iasted", "iagenda"],
+  rssi: ["audit", "idocument", "icom", "iasted", "iagenda"],
+  auditeur: ["audit", "idocument"],
+  admin_technique: ["admin", "idocument", "icorrespondance", "iasted", "iagenda"],
 };
 
 const MODULE_META: Record<
@@ -92,6 +114,26 @@ const MODULE_META: Record<
     label: "Administration",
     description: "Habilitations & paramètres techniques",
     Icon: UserCog,
+  },
+  idocument: {
+    label: "iDocument",
+    description: "Gestion électronique de documents + iArchive",
+    Icon: FileText,
+  },
+  icorrespondance: {
+    label: "iCorrespondance",
+    description: "Courriers officiels avec workflow d'approbation",
+    Icon: Mail,
+  },
+  iasted: {
+    label: "iAsted",
+    description: "Agent intelligent : chat, appels, contacts, réunions",
+    Icon: Bot,
+  },
+  iagenda: {
+    label: "iAgenda",
+    description: "Agenda officiel — événements, réunions, échéances",
+    Icon: Calendar,
   },
 };
 
@@ -146,6 +188,16 @@ export default function ICNSWorkspace() {
   const [creatingDossier, setCreatingDossier] = useState(false);
   const now = useNow();
 
+  // Migration : force la position du bouton spherique en bas-droite (v2).
+  // Reinitialise toute position sauvegardee anterieurement (top-left, etc).
+  useEffect(() => {
+    const MIGRATION_KEY = "iasted-button-position-migrated-v2";
+    if (!localStorage.getItem(MIGRATION_KEY)) {
+      localStorage.removeItem("iasted-button-position");
+      localStorage.setItem(MIGRATION_KEY, "1");
+    }
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/icns/login", { replace: true });
@@ -184,11 +236,29 @@ export default function ICNSWorkspace() {
     [matricule],
   );
 
+  // Hooks SuperAdmin — donne accès au bouton sphérique iAsted + modal chat
+  const {
+    openaiRTC,
+    selectedVoice,
+    isChatOpen,
+    setIsChatOpen,
+  } = useSuperAdmin();
+
+  // Theme toggle (light/dark)
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const isDark = (resolvedTheme ?? theme) === "dark";
+
   if (!isAuthenticated || !jwt || !role) {
     return null;
   }
 
-  const allowedModules = MODULES_PAR_ROLE[role] ?? ["dossiers"];
+  // Mémorisé pour éviter de recréer une nouvelle référence à chaque render
+  // (sinon `iastedSnapshot` est rebuild et `usePublishPageContext` republie
+  // en boucle, ce qui pollue le store et peut déstabiliser les abonnés).
+  const allowedModules = useMemo(
+    () => MODULES_PAR_ROLE[role] ?? (["idocument"] as ModuleKey[]),
+    [role],
+  );
   const classification = ROLE_CLASSIFICATION[role] ?? "CD";
   const activeMeta = MODULE_META[active];
 
@@ -201,8 +271,89 @@ export default function ICNSWorkspace() {
     ? Math.max(0, Math.round((expiresAt - now.getTime()) / 60_000))
     : null;
 
+  // Snapshot de contexte publié à iAsted : agent connaît le module actif,
+  // les modules accessibles selon le rôle, et les actions exécutables ici.
+  // L'agent vocal pourra ainsi répondre à « va au cockpit », « ouvre la cellule »,
+  // « crée un dossier », « déconnecte-moi » sans dépendre des regex globales.
+  const iastedSnapshot: PageContextSnapshot = useMemo(() => {
+    const moduleEntities = allowedModules.map<{
+      id: string;
+      type: string;
+      label: string;
+      data?: Record<string, unknown>;
+    }>((m) => ({
+      id: m,
+      type: "module_icns",
+      label: MODULE_META[m].label,
+      data: { active: m === active, description: MODULE_META[m].description },
+    }));
+
+    return {
+      module: "Workspace iCNS",
+      pathname: "/icns/workspace",
+      title: `Workspace iCNS — ${MODULE_META[active].label}`,
+      summary:
+        `Rôle ${ROLE_LABEL[role] ?? role}, habilitation ${classification}. ` +
+        `${allowedModules.length} modules accessibles, module actif : ${MODULE_META[active].label}.`,
+      visibleEntities: moduleEntities,
+      availableActions: [
+        ...allowedModules.map((m) => ({
+          id: `switch_module_${m}`,
+          label: `Aller vers ${MODULE_META[m].label}`,
+          description: `Bascule le module actif vers ${MODULE_META[m].label}.`,
+          voiceTriggers: [
+            MODULE_META[m].label.toLowerCase(),
+            // Alias vocaux étoffés (singulier, pluriel, formes raccourcies)
+            ...(m === "sg-cockpit" ? ["cockpit", "cockpit sg", "tableau strategique"] : []),
+            ...(m === "cellule" ? ["cellule cns", "cellule centrale", "synthese", "syntheses"] : []),
+            ...(m === "dossiers" ? ["dossier", "dossiers", "mes dossiers"] : []),
+            ...(m === "idocument" ? ["i document", "documents", "document", "ged", "coffre", "pieces"] : []),
+            ...(m === "icorrespondance" ? ["correspondance", "courrier", "courriers", "lettre", "lettres"] : []),
+            ...(m === "icom" ? ["communications", "messages", "chat inter agences"] : []),
+            ...(m === "iagenda" ? ["agenda", "calendrier", "rendez-vous", "evenements"] : []),
+            ...(m === "audit" ? ["journal d'audit", "journal audit", "audit rssi", "rssi"] : []),
+            ...(m === "archive" ? ["archives", "iarchive"] : []),
+            ...(m === "admin" ? ["administration", "habilitations", "parametres techniques"] : []),
+            ...(m === "iasted" ? ["module iasted", "appels", "contacts", "reunions"] : []),
+          ],
+          run: () => setActive(m),
+        })),
+        {
+          id: "create_dossier",
+          label: "Créer un dossier",
+          description: "Ouvre l'assistant de création d'un nouveau dossier de renseignement.",
+          voiceTriggers: ["créer un dossier", "nouveau dossier", "ouvrir un dossier"],
+          run: () => {
+            setActive("dossiers" as ModuleKey);
+            setCreatingDossier(true);
+          },
+        },
+        {
+          id: "logout",
+          label: "Se déconnecter",
+          description: "Met fin à la session iCNS et redirige vers l'écran de login MFA.",
+          requiresConfirmation: true,
+          voiceTriggers: ["déconnecte-moi", "déconnexion", "quitter la session"],
+          run: () => {
+            clearAuth("voice_command");
+            navigate("/icns/login", { replace: true });
+          },
+        },
+        {
+          id: "toggle_theme",
+          label: "Basculer le thème",
+          description: "Bascule entre le thème clair et le thème sombre.",
+          voiceTriggers: ["bascule le thème", "change le thème", "mode sombre", "mode clair"],
+          run: () => setTheme(isDark ? "light" : "dark"),
+        },
+      ],
+    };
+  }, [active, allowedModules, role, classification, clearAuth, navigate, isDark, setTheme]);
+
+  usePublishPageContext(iastedSnapshot);
+
   return (
-    <div className="min-h-screen bg-muted/30 text-foreground">
+    <div className="dash-v2 min-h-screen bg-background text-foreground">
       <ClassificationBanner classification={classification} />
 
       {/* Header riche */}
@@ -250,22 +401,40 @@ export default function ICNSWorkspace() {
                 minute: "2-digit",
               })}
             </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              aria-label={isDark ? "Activer le mode clair" : "Activer le mode sombre"}
+              title={isDark ? "Mode clair" : "Mode sombre"}
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
             </Button>
           </div>
 
-          {/* Déconnexion mobile */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-            className="md:hidden"
-            aria-label="Déconnexion"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
+          {/* Actions mobile */}
+          <div className="flex items-center gap-1 md:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              aria-label={isDark ? "Mode clair" : "Mode sombre"}
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              aria-label="Déconnexion"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -449,9 +618,38 @@ export default function ICNSWorkspace() {
             {active === "audit" && <AuditModule />}
             {active === "admin" && <AdminModule />}
             {active === "archive" && <ArchiveModule />}
+
+            {/* Modules iCNS étendus */}
+            {active === "idocument" && <IDocumentWorkspace />}
+            {active === "icorrespondance" && <ICorrespondanceSection />}
+            {active === "iasted" && <IAstedSection />}
+            {active === "iagenda" && <IAgendaSection />}
           </div>
         </main>
       </div>
+
+      {/* Bouton sphérique iAsted — accès rapide à l'agent depuis tout module */}
+      <IAstedButtonFull
+        voiceListening={openaiRTC.voiceState === "listening"}
+        voiceSpeaking={openaiRTC.voiceState === "speaking"}
+        voiceProcessing={
+          openaiRTC.voiceState === "connecting" || openaiRTC.voiceState === "thinking"
+        }
+        audioLevel={openaiRTC.audioLevel}
+        onClick={() => {
+          if (openaiRTC.isConnected) {
+            openaiRTC.disconnect();
+          } else {
+            // Connexion vocale rapide en mode démo (système prompt par défaut)
+            openaiRTC.connect(selectedVoice, undefined);
+          }
+        }}
+        onDoubleClick={() => setIsChatOpen(true)}
+      />
+      <IAstedPopup
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
     </div>
   );
 }

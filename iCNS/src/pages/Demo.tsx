@@ -95,6 +95,56 @@ const ROLE_LABEL: Record<Persona["role"], string> = {
 };
 
 // ──────────────────────────────────────────────────────────────────────
+// Helpers mode démo local (Convex désactivé)
+// ──────────────────────────────────────────────────────────────────────
+
+const CONVEX_PLACEHOLDER_MARKERS = [
+  "perfect-bullfrog",
+  "example",
+  "preview",
+  "placeholder",
+  "icns-convex-disabled",
+  "localhost.invalid",
+];
+
+/**
+ * Détecte si l'URL Convex active est un placeholder. Synchronisé avec
+ * la même heuristique dans `main.tsx` : dans ce cas, le backend n'est
+ * pas réellement joignable et on bascule sur un flow auth 100 % local.
+ */
+function isConvexDisabled(): boolean {
+  const url = (import.meta.env.VITE_CONVEX_URL ?? "").toLowerCase();
+  if (!url) return true;
+  return CONVEX_PLACEHOLDER_MARKERS.some((m) => url.includes(m));
+}
+
+/** Encode un objet en base64url compact (sans padding) pour le JWT. */
+function b64url(obj: unknown): string {
+  return btoa(JSON.stringify(obj))
+    .replace(/=+$/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+}
+
+/**
+ * Construit un JWT compact `header.payload.signature` 100 % local, avec
+ * le matricule du persona dans `sub`. La signature est mockée — accepté
+ * par `useICNSAuth.setAuth` (validation de forme uniquement), et permet
+ * à `useCurrentPersona()` de retrouver le persona dans `ICNS_PERSONAS`
+ * via le sub décodé.
+ */
+function makeLocalDemoJwt(matricule: string, expiresAt: number): string {
+  const header = b64url({ alg: "HS256", typ: "JWT" });
+  const payload = b64url({
+    sub: matricule,
+    exp: Math.floor(expiresAt / 1000),
+    iss: "icns-demo-local",
+  });
+  const sig = `MOCK_${matricule.replace(/[^A-Za-z0-9_-]/g, "_")}`;
+  return `${header}.${payload}.${sig}`;
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // Composant
 // ──────────────────────────────────────────────────────────────────────
 
@@ -136,7 +186,34 @@ const Demo = () => {
     setLoadingMatricule(persona.matricule);
     const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
     const now = Date.now();
+
+    // Si l'instance Convex est désactivée (URL placeholder détectée
+    // dans main.tsx), on bascule sur un flow 100 % local : on génère un
+    // JWT compact bien formé contenant le matricule dans `sub`. Le store
+    // d'auth iCNS l'accepte (validation de forme uniquement), et tous les
+    // modules locaux (coffre Zustand, Dossiers cellules, useCurrentPersona)
+    // continuent à fonctionner.
+    const convexDisabled = isConvexDisabled();
+
     try {
+      if (convexDisabled) {
+        const expiresAt = now + 8 * 3600 * 1000;
+        const jwt = makeLocalDemoJwt(persona.matricule, expiresAt);
+        setAuth({
+          jwt,
+          expiresAt,
+          role: persona.role,
+          service: persona.serviceCode,
+        });
+        toast({
+          title: `Connecté · ${persona.prenomNom}`,
+          description: `${ROLE_LABEL[persona.role]} · ${persona.serviceLabel} · ${persona.classificationMax} · mode démo local`,
+        });
+        navigate("/icns/workspace", { replace: true });
+        return;
+      }
+
+      // ── Flow Convex standard ────────────────────────────────────────
       // 1) Récupérer un challenge frais (stateless côté serveur).
       const challenge = await convex.query(
         api.auth.authenticate.issueChallenge,

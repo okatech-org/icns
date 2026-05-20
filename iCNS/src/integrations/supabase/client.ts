@@ -34,6 +34,32 @@ const authShim = {
     };
   },
 
+  // Compat avec l'API Supabase v2 : renvoie une session basee sur Firebase.
+  // Utilise par useRealtimeVoiceWebRTC (obtention du token ephemere OpenAI).
+  async getSession(): Promise<{
+    data: { session: { access_token: string; user: { id: string; email: string } } | null };
+    error: null;
+  }> {
+    const user = auth.currentUser;
+    if (!user) {
+      return { data: { session: null }, error: null };
+    }
+    try {
+      const access_token = await user.getIdToken();
+      return {
+        data: {
+          session: {
+            access_token,
+            user: { id: user.uid, email: user.email || '' },
+          },
+        },
+        error: null,
+      };
+    } catch {
+      return { data: { session: null }, error: null };
+    }
+  },
+
   async signInWithPassword({ email, password }: { email: string; password: string }) {
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);

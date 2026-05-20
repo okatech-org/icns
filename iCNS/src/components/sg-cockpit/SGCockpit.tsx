@@ -5,7 +5,6 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { useICNSAuth } from "../../auth/useICNSAuth";
-import { ClassificationBanner } from "../dossiers/ClassificationBanner";
 
 export function SGCockpit() {
   const jwt = useICNSAuth((s) => s.jwt);
@@ -22,7 +21,8 @@ export function SGCockpit() {
 
   return (
     <div className="space-y-4">
-      <ClassificationBanner classification="TSD" />
+      {/* La classification TSD est deja affichee par le bandeau sticky en
+          haut de l'iCNS Workspace, pas de duplication ici. */}
       <header>
         <h1 className="text-2xl font-bold tracking-tight">Cockpit SG-CNS</h1>
         <p className="text-sm text-muted-foreground">
@@ -63,7 +63,7 @@ function StrategicDashboard({ jwt }: { jwt: string }) {
   }, {});
 
   return (
-    <section className="rounded-md border border-border p-4">
+    <section className="rounded-lg border border-border bg-card p-4">
       <h2 className="mb-3 text-lg font-semibold">Tableau stratégique</h2>
       <div className="space-y-3 text-sm">
         <div>
@@ -123,14 +123,19 @@ function FlashAlerts({ jwt }: { jwt: string }) {
   ];
 
   return (
-    <section className="rounded-md border border-red-500/50 bg-red-500/5 p-4">
-      <h2 className="mb-3 text-lg font-semibold text-red-300">Alertes Flash escaladées</h2>
+    <section className="rounded-lg border border-red-200/60 bg-red-50/50 p-4 dark:border-red-900/40 dark:bg-red-950/20">
+      <h2 className="mb-3 text-lg font-semibold text-red-700 dark:text-red-300">
+        Alertes Flash escaladées
+      </h2>
       {flashEscalades.length === 0 ? (
         <p className="text-sm text-muted-foreground">Aucune escalade active.</p>
       ) : (
         <ul className="space-y-2 text-sm">
           {flashEscalades.map((c) => (
-            <li key={c._id} className="rounded-md border border-red-500/50 p-2">
+            <li
+              key={c._id}
+              className="rounded-md border border-red-200/60 bg-card/60 p-2 dark:border-red-900/40"
+            >
               <p className="font-mono text-xs">{c.reference}</p>
               <p className="text-xs">
                 Type : {c.type ?? "—"} · destinataire : {c.destinataireService ?? "—"}
@@ -157,7 +162,7 @@ function SynthesesAValider({ jwt }: { jwt: string }) {
   const [transmettre, setTransmettre] = useState(false);
 
   return (
-    <section className="rounded-md border border-border p-4">
+    <section className="rounded-lg border border-border bg-card p-4">
       <h2 className="mb-3 text-lg font-semibold">Synthèses à signer</h2>
       {syntheses === undefined && <p className="text-sm">Chargement…</p>}
       {syntheses && syntheses.length === 0 && (
@@ -253,7 +258,7 @@ function ConvergencesNouvelles({ jwt }: { jwt: string }) {
     limit: 20,
   });
   return (
-    <section className="rounded-md border border-border p-4">
+    <section className="rounded-lg border border-border bg-card p-4">
       <h2 className="mb-3 text-lg font-semibold">Convergences détectées</h2>
       {convergences === undefined && <p className="text-sm">Chargement…</p>}
       {convergences && convergences.length === 0 && (
@@ -278,7 +283,7 @@ function ConvergencesNouvelles({ jwt }: { jwt: string }) {
 
 function ActionsSG({ jwt: _jwt }: { jwt: string }) {
   return (
-    <section className="rounded-md border border-border p-4">
+    <section className="rounded-lg border border-border bg-card p-4">
       <h2 className="mb-3 text-lg font-semibold">Actions du SG-CNS</h2>
       <p className="text-sm text-muted-foreground">
         Convoquer une formation restreinte, demander un éclaircissement, activer une

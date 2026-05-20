@@ -35,7 +35,12 @@ import autoTable from "jspdf-autotable";
 import { useTheme } from "next-themes";
 import emblemGabon from "@/assets/emblem_gabon.png";
 import { DocumentSettingsManager } from '@/components/admin/documents/DocumentSettingsManager';
-import { FileText, Download, Eye, Paperclip, FileSpreadsheet, MessageSquare, FileCog } from "lucide-react";
+import { FileText, Download, Eye, Paperclip, FileSpreadsheet, MessageSquare, FileCog, Calendar, Mail, Inbox } from "lucide-react";
+import { IDocumentWorkspace } from '@/components/idocument/IDocumentWorkspace';
+import { ICorrespondanceSection } from '@/components/icorrespondance/ICorrespondanceSection';
+import { IAstedSection } from '@/components/iasted/IAstedSection';
+import { IAgendaSection } from '@/components/iagenda/IAgendaSection';
+import { ModuleNavButton } from '@/components/shared/ModuleNavButton';
 
 // Admin Components
 import { AIConfigSection } from '@/components/admin/AIConfigSection';
@@ -73,6 +78,10 @@ const AdminSpace = () => {
         { id: 'users', label: 'Utilisateurs', icon: Users },
         { id: 'feedbacks', label: 'Feedbacks', icon: MessageSquare },
         { id: 'intelligence', label: 'Intel', icon: ShieldAlert },
+        { id: 'idocument', label: 'iDocument', icon: FileText },
+        { id: 'icorrespondance', label: 'iCorrespondance', icon: Mail },
+        { id: 'iasted-full', label: 'iAsted', icon: Bot },
+        { id: 'iagenda', label: 'iAgenda', icon: Calendar },
     ], []);
 
     const [activeSection, setActiveSection] = useState('dashboard');
@@ -445,6 +454,43 @@ const AdminSpace = () => {
                     </nav>
                 )}
             </div>
+
+            {/* Modules iCNS */}
+            <div className="mb-4">
+                <p className="px-3 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
+                    MODULES iCNS
+                </p>
+                <nav className="space-y-1 ml-2">
+                    <ModuleNavButton
+                        id="idocument"
+                        label="iDocument"
+                        icon={FileText}
+                        activeSection={activeSection}
+                        onClick={() => setActiveSection("idocument")}
+                    />
+                    <ModuleNavButton
+                        id="icorrespondance"
+                        label="iCorrespondance"
+                        icon={Mail}
+                        activeSection={activeSection}
+                        onClick={() => setActiveSection("icorrespondance")}
+                    />
+                    <ModuleNavButton
+                        id="iasted-full"
+                        label="iAsted"
+                        icon={Bot}
+                        activeSection={activeSection}
+                        onClick={() => setActiveSection("iasted-full")}
+                    />
+                    <ModuleNavButton
+                        id="iagenda"
+                        label="iAgenda"
+                        icon={Calendar}
+                        activeSection={activeSection}
+                        onClick={() => setActiveSection("iagenda")}
+                    />
+                </nav>
+            </div>
         </>
     );
 
@@ -661,6 +707,28 @@ const AdminSpace = () => {
                 {activeSection === 'config' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <ConfigSection />
+                    </div>
+                )}
+
+                {/* Modules iCNS — sections inline */}
+                {activeSection === 'idocument' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <IDocumentWorkspace />
+                    </div>
+                )}
+                {activeSection === 'icorrespondance' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <ICorrespondanceSection />
+                    </div>
+                )}
+                {activeSection === 'iasted-full' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <IAstedSection />
+                    </div>
+                )}
+                {activeSection === 'iagenda' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <IAgendaSection />
                     </div>
                 )}
             </div>

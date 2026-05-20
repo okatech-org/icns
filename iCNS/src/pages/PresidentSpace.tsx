@@ -51,6 +51,10 @@ import { IAstedChatModal } from '@/components/iasted/IAstedChatModal';
 import { MailInbox } from '@/components/iasted/MailInbox';
 import IAstedButtonFull from "@/components/iasted/IAstedButtonFull";
 import { DocumentsSection } from '@/components/documents/DocumentsSection';
+import { IDocumentWorkspace } from '@/components/idocument/IDocumentWorkspace';
+import { ICorrespondanceSection } from '@/components/icorrespondance/ICorrespondanceSection';
+import { IAstedSection } from '@/components/iasted/IAstedSection';
+import { IAgendaSection } from '@/components/iagenda/IAgendaSection';
 import { SettingsModal } from '@/components/president/SettingsModal';
 import { DocumentSignerModal } from '@/components/president/DocumentSignerModal';
 import { NominationDetailsModal } from '@/components/president/NominationDetailsModal';
@@ -320,6 +324,10 @@ export default function PresidentSpace() {
         { id: "documents", label: "Documents", icon: FileText },
         { id: "courriers", label: "Courriers", icon: Inbox },
         { id: "iasted", label: "iAsted", icon: Bot },
+        { id: "idocument", label: "iDocument", icon: FileText },
+        { id: "icorrespondance", label: "iCorrespondance", icon: Inbox },
+        { id: "iasted-full", label: "iAsted", icon: Bot },
+        { id: "iagenda", label: "iAgenda", icon: Calendar },
     ], []);
 
     const NavButton = ({ id, icon: Icon, label, count }: any) => (
@@ -399,6 +407,15 @@ export default function PresidentSpace() {
             <div className="my-4 border-t border-border/50" />
 
             <NavButton id="iasted" icon={Bot} label="Assistant iAsted" />
+
+            <div className="my-4 border-t border-border/50" />
+            <p className="px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Modules iCNS
+            </p>
+            <NavButton id="idocument" icon={FileText} label="iDocument" />
+            <NavButton id="icorrespondance" icon={Inbox} label="iCorrespondance" />
+            <NavButton id="iasted-full" icon={Bot} label="iAsted" />
+            <NavButton id="iagenda" icon={Calendar} label="iAgenda" />
         </nav>
     );
 
@@ -415,7 +432,11 @@ export default function PresidentSpace() {
                     activeSection === 'documents' ? 'Gestion Documentaire' :
                         activeSection === 'courriers' ? 'Courriers & Correspondances' :
                             activeSection === 'iasted' ? 'Assistant IAsted' :
-                                'Espace Président'
+                                activeSection === 'idocument' ? 'iDocument' :
+                                    activeSection === 'icorrespondance' ? 'iCorrespondance' :
+                                        activeSection === 'iasted-full' ? 'Assistant iAsted' :
+                                            activeSection === 'iagenda' ? 'iAgenda' :
+                                                'Espace Président'
             }
             headerSubtitle={new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         >
@@ -489,6 +510,28 @@ export default function PresidentSpace() {
 
             {activeSection === "courriers" && (
                 <MailInbox />
+            )}
+
+            {/* Modules iCNS — sections inline */}
+            {activeSection === "idocument" && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <IDocumentWorkspace />
+                </div>
+            )}
+            {activeSection === "icorrespondance" && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <ICorrespondanceSection />
+                </div>
+            )}
+            {activeSection === "iasted-full" && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <IAstedSection />
+                </div>
+            )}
+            {activeSection === "iagenda" && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <IAgendaSection />
+                </div>
             )}
 
             {activeSection === "conseil-ministres" && (
